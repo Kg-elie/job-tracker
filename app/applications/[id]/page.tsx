@@ -73,7 +73,12 @@ export default function ApplicationDetail() {
         cv_latex:   data.latex,
         cv_pdf_path: data.pdfPath ?? prev.cv_pdf_path,
       } : null);
-      setRecompileMsg(data.pdfPath ? '✅ PDF généré ! Ouvre l\'onglet PDF pour le voir.' : '⚠️ LaTeX mis à jour, mais la compilation cloud a échoué.');
+      if (data.pdfPath) {
+        setRecompileMsg('✅ PDF généré !');
+        setTab('pdf');
+      } else {
+        setRecompileMsg(`⚠️ LaTeX mis à jour, compilation échouée.\nErreur : ${data.pdfError ?? 'inconnue'}`);
+      }
     } catch (e) {
       setRecompileMsg(`❌ Erreur : ${String(e)}`);
     }
@@ -261,13 +266,21 @@ export default function ApplicationDetail() {
             <>
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <span className="text-sm font-semibold text-slate-700">Aperçu PDF</span>
-                <a href={app.cv_pdf_path} target="_blank" rel="noreferrer"
-                   className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium">
-                  ⬇ Télécharger
-                </a>
+                <div className="flex gap-2">
+                  <a
+                    href={`/api/pdf/${app.id}?dl=1`}
+                    className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
+                  >⬇ Télécharger</a>
+                  <a
+                    href={`/api/pdf/${app.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium"
+                  >↗ Ouvrir</a>
+                </div>
               </div>
               <iframe
-                src={`${app.cv_pdf_path}#toolbar=1&view=FitH`}
+                src={`/api/pdf/${app.id}#toolbar=1&view=FitH`}
                 className="w-full"
                 style={{ height: '80vh', border: 'none' }}
                 title="CV PDF"
@@ -290,7 +303,7 @@ export default function ApplicationDetail() {
             <span className="text-sm font-semibold text-slate-700">Source LaTeX</span>
             <div className="flex gap-2 flex-wrap justify-end">
               {app.cv_pdf_path && (
-                <a href={app.cv_pdf_path} target="_blank" className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium">⬇ PDF</a>
+                <a href={`/api/pdf/${app.id}?dl=1`} className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium">⬇ PDF</a>
               )}
               {app.cv_latex && (<>
                 <button

@@ -28,7 +28,7 @@ export async function GET(
       buf = Buffer.from(await res.arrayBuffer());
     }
 
-    return new NextResponse(buf, {
+    return new NextResponse(buf.buffer as ArrayBuffer, {
       headers: {
         'Content-Type':        'application/pdf',
         'Content-Disposition': forceDownload ? `attachment; filename="${name}"` : `inline; filename="${name}"`,

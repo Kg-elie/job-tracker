@@ -4,6 +4,8 @@ import { generateIIITVLatex, compileLatex } from '@/lib/latex';
 import { log } from '@/lib/logger';
 import type { Profile } from '@/lib/db';
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const { applicationId, cvJson }: { applicationId: number; cvJson: Profile } = await req.json();

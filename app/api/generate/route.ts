@@ -40,9 +40,10 @@ export async function POST(req: NextRequest) {
     // Compilation PDF — on ne bloque pas si ça timeout
     log.info('generate: compilation PDF');
     const fname   = `cv_${applicationId}_${Date.now()}`;
+    type TimeoutResult = { success: false; error: string; latexSource: string; pdfPath?: undefined };
     const compile = await Promise.race([
       compileLatex(latex, fname),
-      new Promise<{ success: false; error: string; latexSource: string }>(resolve =>
+      new Promise<TimeoutResult>(resolve =>
         setTimeout(() => resolve({ success: false, error: 'timeout', latexSource: latex }), 25_000)
       ),
     ]);

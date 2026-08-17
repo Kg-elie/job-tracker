@@ -32,12 +32,18 @@ export default function ApplicationDetail() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
 
-  function copyLink(path: string, key: string) {
+  function shareFile(path: string, title: string, key: string) {
     const url = `${window.location.origin}${path}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(key);
-      setTimeout(() => setCopied(null), 2000);
-    });
+    if (navigator.share) {
+      // iOS : ouvre la feuille de partage native (Safari, Fichiers, AirDrop…)
+      navigator.share({ title, url }).catch(() => {});
+    } else {
+      // Desktop : copie le lien
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(key);
+        setTimeout(() => setCopied(null), 2000);
+      });
+    }
   }
 
   useEffect(() => {
@@ -287,7 +293,7 @@ export default function ApplicationDetail() {
                     className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium"
                   >↗ Ouvrir</a>
                   <button
-                    onClick={() => copyLink(`/api/pdf/${app.id}?dl=1`, 'pdf')}
+                    onClick={() => shareFile(`/api/pdf/${app.id}?dl=1`, `CV_${app.position}_${app.company}`, 'pdf')}
                     className="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-lg font-medium"
                   >{copied === 'pdf' ? '✅ Lien copié !' : '🔗 Partager'}</button>
                 </div>
@@ -382,7 +388,7 @@ export default function ApplicationDetail() {
                   className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
                 >⬇ PDF</a>
                 <button
-                  onClick={() => copyLink(`/api/letter/${app.id}`, 'letter')}
+                  onClick={() => shareFile(`/api/letter/${app.id}`, `Lettre_${app.position}_${app.company}`, 'letter')}
                   className="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-lg font-medium"
                 >{copied === 'letter' ? '✅ Lien copié !' : '🔗 Partager'}</button>
               </div>

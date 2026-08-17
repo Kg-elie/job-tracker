@@ -221,6 +221,39 @@ ${certsLatex}
 `;
 }
 
+// ── Lettre de motivation LaTeX ────────────────────────────────────────────────
+export function generateLetterLatex(letter: string, profile: { name: string; email: string; phone: string; location: string }, job: { company: string; position: string }): string {
+  const lines = letter.split('\n').map(l => esc(l) || '\\vspace{2mm}').join('\n\n');
+  return `\\documentclass[a4paper,11pt]{article}
+\\usepackage[utf8]{inputenc}
+\\usepackage[T1]{fontenc}
+\\usepackage[french]{babel}
+\\usepackage{geometry}
+\\usepackage{parskip}
+\\usepackage[hidelinks]{hyperref}
+\\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+\\pagestyle{empty}
+\\begin{document}
+\\fontfamily{cmr}\\selectfont
+
+\\begin{flushright}
+  \\textbf{${esc(profile.name)}}\\\\
+  ${esc(profile.location)}\\\\
+  \\href{mailto:${esc(profile.email)}}{${esc(profile.email)}}\\\\
+  ${esc(profile.phone)}
+\\end{flushright}
+
+\\vspace{6mm}
+\\textbf{${esc(job.company)}} --- Candidature : ${esc(job.position)}
+
+\\vspace{6mm}
+
+${lines}
+
+\\end{document}
+`;
+}
+
 // ── Compile Result ────────────────────────────────────────────────────────────
 export interface CompileResult {
   success: boolean;

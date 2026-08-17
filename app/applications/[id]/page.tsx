@@ -30,6 +30,15 @@ export default function ApplicationDetail() {
   const [recompiling, setRecompiling] = useState(false);
   const [recompileMsg, setRecompileMsg] = useState('');
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  function copyLink(path: string, key: string) {
+    const url = `${window.location.origin}${path}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(key);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  }
 
   useEffect(() => {
     fetch(`/api/applications/${id}`)
@@ -266,7 +275,7 @@ export default function ApplicationDetail() {
             <>
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <span className="text-sm font-semibold text-slate-700">Aperçu PDF</span>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap justify-end">
                   <a
                     href={`/api/pdf/${app.id}?dl=1`}
                     className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
@@ -277,6 +286,10 @@ export default function ApplicationDetail() {
                     rel="noreferrer"
                     className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium"
                   >↗ Ouvrir</a>
+                  <button
+                    onClick={() => copyLink(`/api/pdf/${app.id}?dl=1`, 'pdf')}
+                    className="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-lg font-medium"
+                  >{copied === 'pdf' ? '✅ Lien copié !' : '🔗 Partager'}</button>
                 </div>
               </div>
               <iframe
@@ -361,8 +374,18 @@ export default function ApplicationDetail() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
             <span className="text-sm font-semibold text-slate-700">Lettre de motivation</span>
             {app.letter_text && (
-              <button onClick={() => navigator.clipboard.writeText(app.letter_text)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium">📋 Copier</button>
+              <div className="flex gap-2">
+                <button onClick={() => navigator.clipboard.writeText(app.letter_text)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium">📋 Copier</button>
+                <a
+                  href={`/api/letter/${app.id}`}
+                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
+                >⬇ PDF</a>
+                <button
+                  onClick={() => copyLink(`/api/letter/${app.id}`, 'letter')}
+                  className="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-lg font-medium"
+                >{copied === 'letter' ? '✅ Lien copié !' : '🔗 Partager'}</button>
+              </div>
             )}
           </div>
           {app.letter_text

@@ -301,17 +301,58 @@ async function compileLocal(latex: string, filename: string): Promise<CompileRes
   }
 }
 
-// ── Main entry: cloud first, local fallback ───────────────────────────────────
+// ── Cloud compilation via texlive.net (backup) ───────────────────────────────
+async function compileTeXLive(latex: string, filename: string): Promise<CompileResult> {
+  try {
+    const body = new URLSearchParams();
+    body.append('filecontents[]', latex);
+    body.append('filename[]',     'document.tex');
+    body.append('engine',         'pdflatex');
+    body.append('return',         'pdf');
+
+    const res = await fetch('https://texlive.net/cgi-bin/latexcgi', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    body.toString(),
+      signal:  AbortSignal.timeout(60_000),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      return { success: false, error: `texlive ${res.status}: ${txt.slice(0, 300)}`, latexSource: latex };
+    }
+
+    const ct = res.headers.get('content-type') ?? '';
+    if (!ct.includes('pdf')) {
+      const txt = await res.text().catch(() => '');
+      return { success: false, error: `texlive: réponse non-PDF (${ct}): ${txt.slice(0, 200)}`, latexSource: latex };
+    }
+
+    const buf = Buffer.from(await res.arrayBuffer());
+    const pdfPath = process.env.BLOB_READ_WRITE_TOKEN
+      ? await uploadToBlob(buf, filename)
+      : await saveLocally(buf, filename);
+
+    return { success: true, pdfPath, latexSource: latex };
+  } catch (e) {
+    return { success: false, error: `texlive: ${String(e)}`, latexSource: latex };
+  }
+}
+
+// ── Main entry: ytotech → texlive.net → pdflatex local ───────────────────────
 export async function compileLatex(latex: string, filename: string): Promise<CompileResult> {
   const online = await compileOnline(latex, filename);
   if (online.success) return online;
+
+  const texlive = await compileTeXLive(latex, filename);
+  if (texlive.success) return texlive;
 
   const local = await compileLocal(latex, filename);
   if (local.success) return local;
 
   return {
     success: false,
-    error: `Cloud: ${online.error} | Local: ${local.error}`,
+    error: `ytotech: ${online.error} | texlive: ${texlive.error} | local: ${local.error}`,
     latexSource: latex,
   };
 }

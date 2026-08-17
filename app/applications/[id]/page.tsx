@@ -305,13 +305,29 @@ export default function ApplicationDetail() {
                   }}
                   className="bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
                 >⬇ .tex</button>
-                <a
-                  href="https://www.overleaf.com/latex/new"
-                  target="_blank"
-                  rel="noreferrer"
-                  title="Copie le .tex d'abord, puis colle sur Overleaf"
+                <button
+                  onClick={() => {
+                    // Overleaf "Open in Overleaf" — encode le LaTeX en base64 et l'envoie en POST
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'https://www.overleaf.com/docs';
+                    form.target = '_blank';
+                    const nameInput = document.createElement('input');
+                    nameInput.type  = 'hidden';
+                    nameInput.name  = 'snip_name';
+                    nameInput.value = `CV_${app?.company ?? 'CV'}`;
+                    form.appendChild(nameInput);
+                    const snipInput = document.createElement('input');
+                    snipInput.type  = 'hidden';
+                    snipInput.name  = 'encoded_snip';
+                    snipInput.value = btoa(unescape(encodeURIComponent(app?.cv_latex ?? '')));
+                    form.appendChild(snipInput);
+                    document.body.appendChild(form);
+                    form.submit();
+                    document.body.removeChild(form);
+                  }}
                   className="bg-green-700 hover:bg-green-800 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
-                >🍃 Overleaf</a>
+                >🍃 Overleaf</button>
                 <button
                   onClick={() => navigator.clipboard.writeText(app.cv_latex)}
                   className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium"

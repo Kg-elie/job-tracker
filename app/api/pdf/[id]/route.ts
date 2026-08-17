@@ -12,7 +12,7 @@ export async function GET(
   }
 
   const forceDownload = req.nextUrl.searchParams.get('dl') === '1';
-  const name = `CV_${app.company}_${app.position}.pdf`.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const name = `${app.position}_${app.company}.pdf`.replace(/[^a-zA-Z0-9._-]/g, '_');
 
   try {
     let buf: Buffer;

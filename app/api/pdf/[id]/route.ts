@@ -15,7 +15,7 @@ export async function GET(
   const name = `CV_${app.company}_${app.position}.pdf`.replace(/[^a-zA-Z0-9._-]/g, '_');
 
   try {
-    let buf: ArrayBuffer;
+    let buf: Buffer;
 
     if (app.cv_pdf_path.startsWith('data:application/pdf;base64,')) {
       // PDF stocké en base64 dans la DB (Vercel sans Blob)
@@ -25,7 +25,7 @@ export async function GET(
       // URL Vercel Blob ou chemin HTTP
       const res = await fetch(app.cv_pdf_path, { signal: AbortSignal.timeout(15_000) });
       if (!res.ok) return NextResponse.json({ error: 'PDF inaccessible' }, { status: 502 });
-      buf = await res.arrayBuffer();
+      buf = Buffer.from(await res.arrayBuffer());
     }
 
     return new NextResponse(buf, {

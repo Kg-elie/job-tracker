@@ -12,14 +12,21 @@ export async function GET(
   }
 
   const forceDownload = req.nextUrl.searchParams.get('dl') === '1';
+  const name = `CV_${app.company}_${app.position}.pdf`.replace(/[^a-zA-Z0-9._-]/g, '_');
 
   try {
-    // Si c'est une URL Vercel Blob, on la proxifie pour contrôler les headers
-    const res = await fetch(app.cv_pdf_path, { signal: AbortSignal.timeout(15_000) });
-    if (!res.ok) return NextResponse.json({ error: 'PDF inaccessible' }, { status: 502 });
+    let buf: ArrayBuffer;
 
-    const buf  = await res.arrayBuffer();
-    const name = `CV_${app.company}_${app.position}.pdf`.replace(/[^a-zA-Z0-9._-]/g, '_');
+    if (app.cv_pdf_path.startsWith('data:application/pdf;base64,')) {
+      // PDF stocké en base64 dans la DB (Vercel sans Blob)
+      const b64 = app.cv_pdf_path.slice('data:application/pdf;base64,'.length);
+      buf = Buffer.from(b64, 'base64');
+    } else {
+      // URL Vercel Blob ou chemin HTTP
+      const res = await fetch(app.cv_pdf_path, { signal: AbortSignal.timeout(15_000) });
+      if (!res.ok) return NextResponse.json({ error: 'PDF inaccessible' }, { status: 502 });
+      buf = await res.arrayBuffer();
+    }
 
     return new NextResponse(buf, {
       headers: {

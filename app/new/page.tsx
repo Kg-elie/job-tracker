@@ -104,6 +104,7 @@ export default function NewApplication() {
       const genData = await genRes.json();
       if (!genRes.ok) throw new Error(genData.error);
       if (genData.pdfPath) setPdfPath(genData.pdfPath);
+      if (!genData.pdfPath && genData.pdfError) console.error('PDF compilation:', genData.pdfError);
       setStep('done');
     } catch (e) {
       setError(String(e));

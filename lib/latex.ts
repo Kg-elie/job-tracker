@@ -248,6 +248,18 @@ async function saveLocally(buf: Buffer, filename: string): Promise<string> {
   return `/generated/${filename}.pdf`;
 }
 
+// ── Choisit où stocker le PDF selon l'environnement ─────────────────────────
+async function storePdf(buf: Buffer, filename: string): Promise<string> {
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    return uploadToBlob(buf, filename);
+  }
+  if (process.env.VERCEL) {
+    // Vercel sans Blob : data URL stockée en base (PDF ~100-300KB → ~400KB base64)
+    return `data:application/pdf;base64,${buf.toString('base64')}`;
+  }
+  return saveLocally(buf, filename);
+}
+
 // ── Cloud compilation via latex.ytotech.com ───────────────────────────────────
 async function compileOnline(latex: string, filename: string): Promise<CompileResult> {
   try {
@@ -263,13 +275,8 @@ async function compileOnline(latex: string, filename: string): Promise<CompileRe
       return { success: false, error: `ytotech ${res.status}: ${txt.slice(0, 300)}`, latexSource: latex };
     }
 
-    const buf = Buffer.from(await res.arrayBuffer());
-
-    // Vercel Blob en prod, local en dev
-    const pdfPath = process.env.BLOB_READ_WRITE_TOKEN
-      ? await uploadToBlob(buf, filename)
-      : await saveLocally(buf, filename);
-
+    const buf     = Buffer.from(await res.arrayBuffer());
+    const pdfPath = await storePdf(buf, filename);
     return { success: true, pdfPath, latexSource: latex };
   } catch (e) {
     return { success: false, error: `ytotech: ${String(e)}`, latexSource: latex };
@@ -288,10 +295,8 @@ async function compileLocal(latex: string, filename: string): Promise<CompileRes
     execSync(cmd, { timeout: 30_000, stdio: 'pipe' });
     if (!fs.existsSync(pdfSrc)) return { success: false, error: 'pdflatex: PDF non généré', latexSource: latex };
 
-    const buf = fs.readFileSync(pdfSrc);
-    const pdfPath = process.env.BLOB_READ_WRITE_TOKEN
-      ? await uploadToBlob(buf, filename)
-      : await saveLocally(buf, filename);
+    const buf     = fs.readFileSync(pdfSrc);
+    const pdfPath = await storePdf(buf, filename);
 
     return { success: true, pdfPath, latexSource: latex };
   } catch (e) {
@@ -304,17 +309,16 @@ async function compileLocal(latex: string, filename: string): Promise<CompileRes
 // ── Cloud compilation via texlive.net (backup) ───────────────────────────────
 async function compileTeXLive(latex: string, filename: string): Promise<CompileResult> {
   try {
-    const body = new URLSearchParams();
-    body.append('filecontents[]', latex);
-    body.append('filename[]',     'document.tex');
-    body.append('engine',         'pdflatex');
-    body.append('return',         'pdf');
+    const form = new FormData();
+    form.append('filecontents[]', new Blob([latex], { type: 'text/plain' }), 'document.tex');
+    form.append('filename[]', 'document.tex');
+    form.append('engine', 'pdflatex');
+    form.append('return', 'pdf');
 
     const res = await fetch('https://texlive.net/cgi-bin/latexcgi', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body:    body.toString(),
-      signal:  AbortSignal.timeout(60_000),
+      method: 'POST',
+      body:   form,
+      signal: AbortSignal.timeout(60_000),
     });
 
     if (!res.ok) {
@@ -328,11 +332,8 @@ async function compileTeXLive(latex: string, filename: string): Promise<CompileR
       return { success: false, error: `texlive: réponse non-PDF (${ct}): ${txt.slice(0, 200)}`, latexSource: latex };
     }
 
-    const buf = Buffer.from(await res.arrayBuffer());
-    const pdfPath = process.env.BLOB_READ_WRITE_TOKEN
-      ? await uploadToBlob(buf, filename)
-      : await saveLocally(buf, filename);
-
+    const buf     = Buffer.from(await res.arrayBuffer());
+    const pdfPath = await storePdf(buf, filename);
     return { success: true, pdfPath, latexSource: latex };
   } catch (e) {
     return { success: false, error: `texlive: ${String(e)}`, latexSource: latex };

@@ -135,18 +135,25 @@ import fs   from 'fs';
 const DATA_DIR = path.join(process.cwd(), 'data');
 
 function ensureDir() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch { /* read-only filesystem (Vercel) — ignoré */ }
 }
 function readJSON<T>(file: string, fallback: T): T {
-  ensureDir();
-  const p = path.join(DATA_DIR, file);
-  if (!fs.existsSync(p)) return fallback;
-  try { return JSON.parse(fs.readFileSync(p, 'utf-8')) as T; }
-  catch { return fallback; }
+  try {
+    ensureDir();
+    const p = path.join(DATA_DIR, file);
+    if (!fs.existsSync(p)) return fallback;
+    return JSON.parse(fs.readFileSync(p, 'utf-8')) as T;
+  } catch { return fallback; }
 }
 function writeJSON<T>(file: string, data: T): void {
-  ensureDir();
-  fs.writeFileSync(path.join(DATA_DIR, file), JSON.stringify(data, null, 2), 'utf-8');
+  try {
+    ensureDir();
+    fs.writeFileSync(path.join(DATA_DIR, file), JSON.stringify(data, null, 2), 'utf-8');
+  } catch (e) {
+    throw new Error(`Impossible d'écrire en base locale. Sur Vercel, configure DATABASE_URL. (${e})`);
+  }
 }
 
 const json = {

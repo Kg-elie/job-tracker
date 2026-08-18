@@ -126,20 +126,19 @@ OFFRE:
 - Responsabilités clés: ${analysis.responsibilities.slice(0,3).join(' | ')}
 
 Rédige une lettre de motivation en ${lang} avec:
-- En-tête: ${profile.name} | ${profile.phone} | ${profile.email} | ${profile.location}
 - Date: ${new Date().toLocaleDateString(analysis.language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
 - Destinataire: Service Recrutement, ${analysis.company}
 - Objet: Candidature au poste de ${analysis.position}
 - Corps: 3 paragraphes impactants (accroche + valeur ajoutée + conclusion avec call-to-action)
-- Formule de politesse professionnelle
-- Signature
+- Formule de politesse professionnelle (ex: "Cordialement,")
 
-Règles:
+Règles ABSOLUES:
+- NE PAS inclure les coordonnées (nom, email, téléphone, adresse) — elles sont déjà dans l'en-tête du document
+- NE PAS signer avec le nom à la fin — terminer uniquement par la formule de politesse
 - Maximum 350 mots dans le corps
 - Intègre naturellement les mots-clés: ${analysis.ats_keywords.slice(0,5).join(', ')}
 - Ton professionnel et confiant, jamais arrogant
 - Cite des réalisations concrètes et chiffrées quand possible
-- Termine par une phrase mémorable
 
 Renvoie le texte brut formaté, prêt à copier-coller.`
     }]

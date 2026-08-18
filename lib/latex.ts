@@ -230,23 +230,19 @@ export function generateLetterLatex(letter: string, profile: { name: string; ema
 \\usepackage[french]{babel}
 \\usepackage{geometry}
 \\usepackage{parskip}
+\\usepackage{tabularx}
 \\usepackage[hidelinks]{hyperref}
-\\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+\\geometry{left=2.5cm, right=2.5cm, top=2cm, bottom=2.5cm}
 \\pagestyle{empty}
 \\begin{document}
 \\fontfamily{cmr}\\selectfont
 
-\\begin{flushright}
-  \\textbf{${esc(profile.name)}}\\\\
-  ${esc(profile.location)}\\\\
-  \\href{mailto:${esc(profile.email)}}{${esc(profile.email)}}\\\\
-  ${esc(profile.phone)}
-\\end{flushright}
-
-\\vspace{6mm}
-\\textbf{${esc(job.company)}} --- Candidature : ${esc(job.position)}
-
-\\vspace{6mm}
+% En-tête
+\\begin{tabularx}{\\linewidth}{X r}
+  \\textbf{\\large ${esc(profile.name)}} & ${esc(profile.phone)} \\\\
+  ${esc(profile.location)} & \\href{mailto:${esc(profile.email)}}{${esc(profile.email)}} \\\\
+\\end{tabularx}
+\\vspace{1mm}\\hrule\\vspace{6mm}
 
 ${lines}
 

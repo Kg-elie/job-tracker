@@ -145,7 +145,7 @@ ${highlights}`
 \\fancyfoot{}
 \\renewcommand{\\headrulewidth}{0pt}
 \\renewcommand{\\footrulewidth}{0pt}
-\\geometry{left=1.4cm, top=0.7cm, right=1.2cm, bottom=0.7cm}
+\\geometry{left=1.4cm, top=0.8cm, right=1.2cm, bottom=1cm}
 \\urlstyle{same}
 \\raggedright
 \\setlength{\\tabcolsep}{0in}
@@ -187,13 +187,13 @@ ${highlights}`
   \\resumeSubHeadingListStart
 ${educationLatex}
   \\resumeSubHeadingListEnd
-\\vspace{-8mm}
+\\vspace{-5.5mm}
 %-----------EXPERIENCE-----------
 \\section{\\textbf{Expérience Professionnelle}}
   \\resumeSubHeadingListStart
 ${experienceLatex}
   \\resumeSubHeadingListEnd
-\\vspace{-13mm}
+\\vspace{-4mm}
 %-----------PROJECTS-----------
 \\section{\\textbf{Projets}}
 \\resumeSubHeadingListStart

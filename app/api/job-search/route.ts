@@ -23,6 +23,7 @@ export interface SearchResult {
 }
 
 export async function GET(req: NextRequest) {
+  try {
   const { searchParams } = new URL(req.url);
   const keywords  = searchParams.get('q')        || 'Data Analyst';
   const location  = searchParams.get('where')     || 'Paris, France';
@@ -164,6 +165,12 @@ Réponds UNIQUEMENT avec ce JSON (sans texte avant/après):
   results.sort((a, b) => b.score - a.score);
 
   return NextResponse.json({ results, total: results.length });
+
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('job-search error:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
 
 function contractToJSearch(c: string): string {

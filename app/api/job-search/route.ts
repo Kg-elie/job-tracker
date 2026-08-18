@@ -71,25 +71,28 @@ export async function GET(req: NextRequest) {
   }
 
   const jsearchData = await jsearchRes.json() as {
-    data?: Array<{
-      job_id: string;
-      job_title: string;
-      employer_name: string;
-      job_city?: string;
-      job_country?: string;
-      job_description: string;
-      job_apply_link: string;
-      job_posted_at_datetime_utc: string;
-      job_min_salary?: number;
-      job_max_salary?: number;
-      job_salary_currency?: string;
-      job_employment_type?: string;
-      job_publisher?: string;
-    }>;
+    data?: {
+      jobs?: Array<{
+        job_id: string;
+        job_title: string;
+        employer_name: string;
+        job_city?: string;
+        job_country?: string;
+        job_description: string;
+        job_apply_link: string;
+        job_posted_at_datetime_utc: string;
+        job_salary_string?: string;
+        job_min_salary?: number;
+        job_max_salary?: number;
+        job_salary_currency?: string;
+        job_employment_type?: string;
+        job_publisher?: string;
+      }>;
+    };
     status: string;
   };
 
-  const jobs = jsearchData.data ?? [];
+  const jobs = jsearchData.data?.jobs ?? [];
   if (jobs.length === 0) return NextResponse.json({ results: [], total: 0 });
 
   // ── 2. Claude scoring ─────────────────────────────────────────────────────
@@ -141,13 +144,7 @@ Réponds UNIQUEMENT avec ce JSON (sans texte avant/après):
   // ── 3. Merge + sort (null-safe) ───────────────────────────────────────────
   const results: SearchResult[] = jobs.map((j, i) => {
     const s = scores.find(x => x.i === i);
-    let salary: string | undefined;
-    if (j.job_min_salary && j.job_max_salary) {
-      const cur = j.job_salary_currency === 'EUR' ? '€' : (j.job_salary_currency ?? '€');
-      salary = `${Math.round(j.job_min_salary / 1000)}k–${Math.round(j.job_max_salary / 1000)}k ${cur}`;
-    } else if (j.job_min_salary) {
-      salary = `${Math.round(j.job_min_salary / 1000)}k €+`;
-    }
+    const salary: string | undefined = j.job_salary_string ?? undefined;
     return {
       id:          j.job_id          ?? String(i),
       title:       j.job_title       ?? 'Sans titre',

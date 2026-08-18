@@ -53,7 +53,6 @@ export default function Dashboard() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Mes candidatures</h1>
@@ -64,18 +63,12 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Stats bar */}
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 mb-6">
         {STATUS_ORDER.map(s => {
           const cfg = STATUS_CONFIG[s];
           return (
-            <button
-              key={s}
-              onClick={() => setFilter(prev => prev === s ? 'all' : s)}
-              className={`rounded-xl p-3 sm:p-4 text-left transition-all border-2 bg-white shadow-sm hover:shadow ${
-                filter === s ? 'border-brand-500 shadow-md' : 'border-transparent'
-              }`}
-            >
+            <button key={s} onClick={() => setFilter(prev => prev === s ? 'all' : s)}
+              className={`rounded-xl p-3 sm:p-4 text-left transition-all border-2 bg-white shadow-sm hover:shadow ${filter === s ? 'border-brand-500 shadow-md' : 'border-transparent'}`}>
               <div className="text-xl sm:text-2xl font-bold">{counts[s]}</div>
               <div className="text-xs font-medium mt-1 flex items-center gap-1">
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`}></span>
@@ -86,7 +79,6 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Content */}
       {filtered.length === 0 ? (
         <div className="text-center py-20 text-slate-400">
           <div className="text-5xl mb-4">📭</div>
@@ -95,7 +87,6 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          {/* Desktop : table */}
           <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
@@ -121,9 +112,7 @@ export default function Dashboard() {
                           {STATUS_ORDER.map(s => <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>)}
                         </select>
                       </td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">
-                        {new Date(app.created_at).toLocaleDateString('fr-FR')}
-                      </td>
+                      <td className="px-4 py-3 text-slate-500 text-xs">{new Date(app.created_at).toLocaleDateString('fr-FR')}</td>
                       <td className="px-4 py-3">
                         <div className="flex gap-1">
                           <span className={`text-xs px-2 py-0.5 rounded ${app.cv_latex ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>CV</span>
@@ -144,7 +133,6 @@ export default function Dashboard() {
             </table>
           </div>
 
-          {/* Mobile : cards */}
           <div className="sm:hidden space-y-3">
             {filtered.map(app => {
               const cfg = STATUS_CONFIG[app.status as Status] ?? STATUS_CONFIG.interested;

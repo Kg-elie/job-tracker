@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
   if (contract) jsearchParams.set('employment_types', contractToJSearch(contract));
 
   const jsearchRes = await fetch(
-    `https://jsearch.p.rapidapi.com/search-v5?${jsearchParams}`,
+    `https://jsearch.p.rapidapi.com/search-v2?${jsearchParams}`,
     {
       headers: {
         'x-rapidapi-key':  rapidKey,

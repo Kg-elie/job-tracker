@@ -178,10 +178,10 @@ ${highlights}`
 \\begin{tabularx}{\\linewidth}{L r}
   \\textbf{\\Large ${esc(profile.name)}} & ${esc(profile.phone)} \\\\
   ${esc(profile.availability)} & \\href{mailto:${esc(profile.email)}}{${esc(profile.email)}} \\\\
-  ${esc(profile.location)} & \\href{https://${esc(profile.github)}}{${esc(profile.github)}} \\\\[6mm]
+  ${esc(profile.location)} & \\href{https://${esc(profile.github)}}{${esc(profile.github)}} \\\\[3mm]
 \\end{tabularx}
 \\parbox{\\linewidth}{\\small\\textit{${esc(profile.summary)}}}
-\\vspace{2mm}
+\\vspace{1mm}
 %-----------EDUCATION-----------
 \\section{\\textbf{Formation}}
   \\resumeSubHeadingListStart
@@ -193,7 +193,7 @@ ${educationLatex}
   \\resumeSubHeadingListStart
 ${experienceLatex}
   \\resumeSubHeadingListEnd
-\\vspace{-8.5mm}
+\\vspace{-10mm}
 %-----------PROJECTS-----------
 \\section{\\textbf{Projets}}
 \\resumeSubHeadingListStart

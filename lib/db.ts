@@ -223,7 +223,18 @@ const pg = {
       await sql`INSERT INTO profile (id, data) VALUES (1, ${JSON.stringify(DEFAULT_PROFILE)}) ON CONFLICT (id) DO NOTHING`;
       return DEFAULT_PROFILE;
     }
-    return rows[0].data as Profile;
+    const stored = rows[0].data as Profile;
+    // Les champs identité sont toujours pris depuis le code (jamais écrasés par la DB)
+    return {
+      ...stored,
+      name:         DEFAULT_PROFILE.name,
+      email:        DEFAULT_PROFILE.email,
+      phone:        DEFAULT_PROFILE.phone,
+      location:     DEFAULT_PROFILE.location,
+      github:       DEFAULT_PROFILE.github,
+      linkedin:     DEFAULT_PROFILE.linkedin,
+      availability: DEFAULT_PROFILE.availability,
+    };
   },
   async saveProfile(data: Partial<Profile>): Promise<void> {
     const sql     = await getNeon();

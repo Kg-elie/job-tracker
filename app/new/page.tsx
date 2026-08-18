@@ -96,6 +96,7 @@ export default function NewApplication() {
       const { id } = await createRes.json();
       setAppId(id);
 
+      // Étape 1 : génération AI (CV JSON + lettre) — ~20-25s avec Sonnet
       const genRes = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,9 +104,20 @@ export default function NewApplication() {
       });
       const genData = await genRes.json();
       if (!genRes.ok) throw new Error(genData.error);
-      if (genData.pdfPath) setPdfPath(genData.pdfPath);
-      if (!genData.pdfPath && genData.pdfError) console.error('PDF compilation:', genData.pdfError);
+
       setStep('done');
+
+      // Étape 2 : compilation PDF séparée — ~10-15s (fire & check)
+      fetch('/api/compile-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId: id }),
+      }).then(async r => {
+        if (r.ok) {
+          const d = await r.json();
+          if (d.pdfPath) setPdfPath(d.pdfPath);
+        }
+      }).catch(() => {});
     } catch (e) {
       setError(String(e));
       setStep('review');

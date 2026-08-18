@@ -92,26 +92,34 @@ export async function GET(req: NextRequest) {
     max_tokens: 1000,
     messages: [{
       role: 'user',
-      content: `Tu es un conseiller carrière. Score chaque offre de 1 à 100 selon sa pertinence pour ce profil.
+      content: `Tu es un conseiller carrière. Évalue chaque offre sur 100 points selon sa pertinence pour ce candidat.
+IMPORTANT: utilise TOUT l'intervalle 0-100. Une offre parfaite = 95+, très bonne = 75-90, correcte = 50-70, faible = 20-45, hors sujet = 0-20.
 
-PROFIL:
+PROFIL CANDIDAT:
 - Compétences: ${Object.values(profile.skills).flat().join(', ')}
 - Expérience: ${profile.experience.map(e => `${e.role} chez ${e.company}`).join(', ')}
 - Disponibilité: ${profile.availability}
 
-OFFRES:
-${JSON.stringify(jobsForClaude, null, 2)}
+OFFRES À ÉVALUER:
+${jobsForClaude.map(j => `[${j.i}] ${j.title} — ${j.company}\n${j.description}`).join('\n\n')}
 
-Réponds UNIQUEMENT avec un tableau JSON:
-[{"i": 0, "score": 82, "reason": "correspond à votre profil Tableau/Power BI"}, ...]`,
+Réponds UNIQUEMENT avec ce JSON (pas de texte avant ou après):
+[{"i": 0, "score": 82, "reason": "Python + Tableau requis, correspond parfaitement"}, {"i": 1, "score": 45, "reason": "hors secteur Finance"}, ...]`,
     }],
   });
 
   let scores: Array<{ i: number; score: number; reason: string }> = [];
   try {
     const text = msg.content.find(b => b.type === 'text')?.text ?? '[]';
-    const match = text.match(/\[[\s\S]*\]/);
-    scores = match ? JSON.parse(match[0]) : [];
+    const match = text.match(/\[[\s\S]*?\]/s);
+    if (match) {
+      const parsed = JSON.parse(match[0]) as Array<{ i: number; score: number; reason: string }>;
+      // Normalise si Claude répond sur 10 au lieu de 100
+      const maxScore = Math.max(...parsed.map(p => p.score));
+      scores = maxScore <= 10
+        ? parsed.map(p => ({ ...p, score: Math.round(p.score * 10) }))
+        : parsed;
+    }
   } catch { scores = []; }
 
   // ── 3. Merge + sort ───────────────────────────────────────────────────────

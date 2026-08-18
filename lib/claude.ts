@@ -97,7 +97,7 @@ export async function generateCV(profile: Profile, analysis: JobAnalysis): Promi
 
   const msg = await client.messages.create({
     model: MODEL,
-    max_tokens: 1200,
+    max_tokens: 2500,
     messages: [{
       role: 'user',
       content: `Tu es expert CV ATS. Génère UNIQUEMENT le JSON suivant, sans markdown:

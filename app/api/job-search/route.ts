@@ -31,8 +31,9 @@ export async function GET(req: NextRequest) {
 
   const rapidKey = process.env.RAPIDAPI_KEY;
   if (!rapidKey) {
+    const allKeys = Object.keys(process.env).filter(k => k.includes('RAPID') || k.includes('rapid'));
     return NextResponse.json(
-      { error: 'RAPIDAPI_KEY non configurée dans les variables Vercel.' },
+      { error: `RAPIDAPI_KEY non trouvée. Variables similaires détectées: [${allKeys.join(', ') || 'aucune'}]` },
       { status: 503 }
     );
   }

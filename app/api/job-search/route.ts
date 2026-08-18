@@ -37,24 +37,24 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // ── 1. JSearch (Google Jobs) ──────────────────────────────────────────────
+  // ── 1. JSearch (Google Jobs) via /search-v2 ──────────────────────────────
   const query = location ? `${keywords} in ${location}` : keywords;
 
   const jsearchParams = new URLSearchParams({
     query,
-    page:       '1',
-    num_pages:  '1',
-    date_posted: datePosted,
-    language:   'fr',
+    num_pages:   '1',
+    country:     'fr',
+    date_posted: datePosted === 'all' ? 'all' : datePosted,
   });
   if (contract) jsearchParams.set('employment_types', contractToJSearch(contract));
 
   const jsearchRes = await fetch(
-    `https://jsearch.p.rapidapi.com/search?${jsearchParams}`,
+    `https://jsearch.p.rapidapi.com/search-v5?${jsearchParams}`,
     {
       headers: {
-        'X-RapidAPI-Key':  rapidKey,
-        'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
+        'x-rapidapi-key':  rapidKey,
+        'x-rapidapi-host': 'jsearch.p.rapidapi.com',
+        'Content-Type':    'application/json',
       },
     }
   );

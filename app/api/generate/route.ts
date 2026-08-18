@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     log.info('generate: chargement profil + génération en parallèle', { applicationId });
     const profile = await getProfile();
 
-    // CV et lettre en parallèle — gain de ~15-20s
+    // CV + lettre en parallèle — max(t_cv, t_lettre) au lieu de somme
     const [tailoredCV, letter] = await Promise.all([
       generateCV(profile, analysis),
       generateCoverLetter(profile, analysis),
@@ -37,37 +37,17 @@ export async function POST(req: NextRequest) {
       latex = generateIIITVLatex(tailoredCV);
     }
 
-    // Compilation PDF — on ne bloque pas si ça timeout
-    log.info('generate: compilation PDF');
-    const fname   = `cv_${applicationId}_${Date.now()}`;
-    type TimeoutResult = { success: false; error: string; latexSource: string; pdfPath?: undefined };
-    const compile = await Promise.race([
-      compileLatex(latex, fname),
-      new Promise<TimeoutResult>(resolve =>
-        setTimeout(() => resolve({ success: false, error: 'timeout', latexSource: latex }), 25_000)
-      ),
-    ]);
-
-    if (compile.success) log.info('generate: PDF compilé', { path: compile.pdfPath });
-    else                 log.warn('generate: PDF non compilé', { error: compile.error });
-
+    // Sauvegarde texte — PDF compilé séparément via /api/recompile
     await updateApplication(applicationId, {
-      cv_json:     JSON.stringify(tailoredCV),
-      cv_latex:    latex,
-      cv_pdf_path: compile.pdfPath ?? '',
-      letter_text: letter,
+      cv_json:      JSON.stringify(tailoredCV),
+      cv_latex:     latex,
+      letter_text:  letter,
       job_analysis: JSON.stringify(analysis),
-      template_id: templateId ?? null,
+      template_id:  templateId ?? null,
     });
     log.info('generate: candidature mise à jour', { applicationId });
 
-    return NextResponse.json({
-      ok:       true,
-      cvLatex:  latex,
-      letter,
-      pdfPath:  compile.pdfPath ?? null,
-      pdfError: compile.error   ?? null,
-    });
+    return NextResponse.json({ ok: true, cvLatex: latex, letter });
   } catch (e) {
     log.error('generate: erreur fatale', { error: String(e) });
     return NextResponse.json({ error: String(e) }, { status: 500 });

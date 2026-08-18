@@ -73,7 +73,7 @@ ${jobText}`
 export async function generateCV(profile: Profile, analysis: JobAnalysis): Promise<Profile> {
   const msg = await client.messages.create({
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 2500,
     messages: [{
       role: 'user',
       content: `Tu es un expert en rédaction de CV ATS-optimisés pour le marché français.
@@ -110,7 +110,7 @@ export async function generateCoverLetter(profile: Profile, analysis: JobAnalysi
   const lang = analysis.language === 'en' ? 'anglais' : 'français';
   const msg = await client.messages.create({
     model: MODEL,
-    max_tokens: 2048,
+    max_tokens: 1500,
     messages: [{
       role: 'user',
       content: `Tu es expert en rédaction de lettres de motivation percutantes pour le marché ${lang === 'français' ? 'français' : 'anglophone'}.

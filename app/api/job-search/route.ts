@@ -111,7 +111,7 @@ Réponds UNIQUEMENT avec ce JSON (pas de texte avant ou après):
   let scores: Array<{ i: number; score: number; reason: string }> = [];
   try {
     const text = msg.content.find(b => b.type === 'text')?.text ?? '[]';
-    const match = text.match(/\[[\s\S]*?\]/s);
+    const match = text.match(/\[[\s\S]*?\]/);
     if (match) {
       const parsed = JSON.parse(match[0]) as Array<{ i: number; score: number; reason: string }>;
       // Normalise si Claude répond sur 10 au lieu de 100

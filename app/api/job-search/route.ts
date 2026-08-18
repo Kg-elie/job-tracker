@@ -61,7 +61,11 @@ export async function GET(req: NextRequest) {
 
   if (!jsearchRes.ok) {
     const txt = await jsearchRes.text();
-    return NextResponse.json({ error: `JSearch: ${jsearchRes.status} — ${txt}` }, { status: 502 });
+    console.error('JSearch error:', jsearchRes.status, txt);
+    return NextResponse.json(
+      { error: `JSearch ${jsearchRes.status}: ${txt.slice(0, 300)}` },
+      { status: 502 }
+    );
   }
 
   const jsearchData = await jsearchRes.json() as {

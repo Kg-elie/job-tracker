@@ -30,7 +30,10 @@ export default function ApplicationDetail() {
   const [recompiling, setRecompiling] = useState(false);
   const [recompileMsg, setRecompileMsg] = useState('');
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState<string | null>(null);
+  const [copied, setCopied]         = useState<string | null>(null);
+  const [letter, setLetter]         = useState('');
+  const [letterSaving, setLetterSaving] = useState(false);
+  const [letterSaved, setLetterSaved]   = useState(false);
 
   function shareFile(path: string, title: string, key: string) {
     const url = `${window.location.origin}${path}`;
@@ -53,6 +56,7 @@ export default function ApplicationDetail() {
         if (data.error) { setLoading(false); return; } // 404
         setApp(data);
         setNotes(data.notes ?? '');
+        setLetter(data.letter_text ?? '');
         const parsed = parseCV(data.cv_json);
         if (parsed) setCv(parsed);
         setLoading(false);
@@ -68,6 +72,15 @@ export default function ApplicationDetail() {
   async function saveNotes() {
     await fetch(`/api/applications/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes }) });
     setNoteSaved(true); setTimeout(() => setNoteSaved(false), 2000);
+  }
+
+  async function saveLetter() {
+    setLetterSaving(true);
+    await fetch(`/api/applications/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ letter_text: letter }) });
+    setApp(prev => prev ? { ...prev, letter_text: letter } : null);
+    setLetterSaving(false);
+    setLetterSaved(true);
+    setTimeout(() => setLetterSaved(false), 2000);
   }
 
   async function handleRecompile() {
@@ -379,25 +392,31 @@ export default function ApplicationDetail() {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
             <span className="text-sm font-semibold text-slate-700">Lettre de motivation</span>
-            {app.letter_text && (
-              <div className="flex gap-2">
-                <button onClick={() => navigator.clipboard.writeText(app.letter_text)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium">📋 Copier</button>
-                <a
-                  href={`/api/letter/${app.id}`}
-                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
-                >⬇ PDF</a>
+            <div className="flex gap-2 flex-wrap justify-end">
+              <button
+                onClick={saveLetter}
+                disabled={letterSaving}
+                className="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
+              >{letterSaving ? '⏳ Sauvegarde…' : letterSaved ? '✅ Sauvegardé !' : '💾 Sauvegarder'}</button>
+              <button onClick={() => navigator.clipboard.writeText(letter)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium">📋 Copier</button>
+              {app.letter_text && (<>
+                <a href={`/api/letter/${app.id}`}
+                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium">⬇ PDF</a>
                 <button
                   onClick={() => shareFile(`/api/letter/${app.id}`, `Lettre_${app.position}_${app.company}`, 'letter')}
                   className="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-lg font-medium"
                 >{copied === 'letter' ? '✅ Lien copié !' : '🔗 Partager'}</button>
-              </div>
-            )}
+              </>)}
+            </div>
           </div>
-          {app.letter_text
-            ? <div className="p-6 whitespace-pre-wrap text-sm text-slate-800 leading-relaxed font-serif max-w-2xl">{app.letter_text}</div>
-            : <div className="p-8 text-center text-slate-400"><p className="text-4xl mb-3">📭</p><p>Lettre non générée.</p></div>
-          }
+          <textarea
+            value={letter}
+            onChange={e => setLetter(e.target.value)}
+            className="w-full p-6 text-sm text-slate-800 leading-relaxed font-serif resize-y border-0 focus:outline-none focus:ring-0"
+            style={{ minHeight: '60vh' }}
+            placeholder="La lettre de motivation apparaîtra ici après génération…"
+          />
         </div>
       )}
 

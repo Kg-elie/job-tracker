@@ -15,13 +15,23 @@ function extractText(msg: Anthropic.Message): string {
   throw new Error(`Aucun bloc texte dans la réponse Claude (types reçus: ${msg.content.map(b => b.type).join(', ')})`);
 }
 
-/** Strip markdown code fences if Claude wraps JSON anyway */
+/** Parse JSON from Claude response — handles markdown fences and extra prose */
 function parseJSON<T>(text: string): T {
-  const cleaned = text
-    .replace(/^```(?:json|javascript|js)?\n?/i, '')
-    .replace(/\n?```$/, '')
+  // 1. Try raw text first
+  try { return JSON.parse(text.trim()) as T; } catch { /* continue */ }
+
+  // 2. Strip markdown fences
+  const stripped = text
+    .replace(/^```(?:json|javascript|js)?\n?/im, '')
+    .replace(/\n?```\s*$/m, '')
     .trim();
-  return JSON.parse(cleaned) as T;
+  try { return JSON.parse(stripped) as T; } catch { /* continue */ }
+
+  // 3. Extract first {...} block (handles prose before/after)
+  const match = text.match(/\{[\s\S]*\}/);
+  if (match) return JSON.parse(match[0]) as T;
+
+  throw new Error(`Réponse Claude non-JSON: ${text.slice(0, 200)}`);
 }
 
 // ── Job Analysis ─────────────────────────────────────────────────────────────
@@ -122,18 +132,18 @@ RÈGLES:
 
   const tailoring = parseJSON<CVTailoring>(extractText(msg));
 
-  // Merge avec le profil original — on ne retouche que ce que Claude a changé
+  // Merge avec le profil original — null-safe sur chaque champ
   return {
     ...profile,
-    summary: tailoring.summary,
+    summary: tailoring.summary ?? profile.summary,
     experience: profile.experience.map((exp, i) => ({
       ...exp,
-      bullets: tailoring.experience_bullets[i] ?? exp.bullets,
+      bullets: tailoring.experience_bullets?.[i] ?? exp.bullets,
     })),
-    skills: tailoring.skills,
-    projects: profile.projects
-      .filter(p => tailoring.selected_projects.includes(p.name))
-      .slice(0, 4),
+    skills: tailoring.skills ?? profile.skills,
+    projects: Array.isArray(tailoring.selected_projects) && tailoring.selected_projects.length > 0
+      ? profile.projects.filter(p => tailoring.selected_projects.includes(p.name)).slice(0, 4)
+      : profile.projects.slice(0, 4),
   };
 }
 

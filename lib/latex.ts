@@ -79,7 +79,7 @@ export function generateIIITVLatex(profile: Profile): string {
       \\resumeItemListStart
 ${exp.bullets.map(b => `        \\item {${esc(boldTools(b))}}`).join('\n')}
       \\resumeItemListEnd
-      \\vspace{-3.0mm}`
+      \\vspace{-4.0mm}`
   )).join('\n');
 
   const educationLatex = profile.education.map(ed => {
@@ -145,7 +145,7 @@ ${highlights}`
 \\fancyfoot{}
 \\renewcommand{\\headrulewidth}{0pt}
 \\renewcommand{\\footrulewidth}{0pt}
-\\geometry{left=1.4cm, top=0.8cm, right=1.2cm, bottom=1cm}
+\\geometry{left=1.4cm, top=0.7cm, right=1.2cm, bottom=0.7cm}
 \\urlstyle{same}
 \\raggedright
 \\setlength{\\tabcolsep}{0in}
@@ -178,22 +178,22 @@ ${highlights}`
 \\begin{tabularx}{\\linewidth}{L r}
   \\textbf{\\Large ${esc(profile.name)}} & ${esc(profile.phone)} \\\\
   ${esc(profile.availability)} & \\href{mailto:${esc(profile.email)}}{${esc(profile.email)}} \\\\
-  ${esc(profile.location)} & \\href{https://${esc(profile.github)}}{${esc(profile.github)}} \\\\[3mm]
+  ${esc(profile.location)} & \\href{https://${esc(profile.github)}}{${esc(profile.github)}} \\\\[2mm]
 \\end{tabularx}
 \\parbox{\\linewidth}{\\small\\textit{${esc(profile.summary)}}}
-\\vspace{1mm}
+\\vspace{0mm}
 %-----------EDUCATION-----------
 \\section{\\textbf{Formation}}
   \\resumeSubHeadingListStart
 ${educationLatex}
   \\resumeSubHeadingListEnd
-\\vspace{-5.5mm}
+\\vspace{-8mm}
 %-----------EXPERIENCE-----------
 \\section{\\textbf{Expérience Professionnelle}}
   \\resumeSubHeadingListStart
 ${experienceLatex}
   \\resumeSubHeadingListEnd
-\\vspace{-10mm}
+\\vspace{-13mm}
 %-----------PROJECTS-----------
 \\section{\\textbf{Projets}}
 \\resumeSubHeadingListStart

@@ -12,10 +12,11 @@ const CONTRACT_OPTIONS = [
 ];
 
 const DATE_OPTIONS = [
-  { value: 0,    label: 'Toutes dates' },
-  { value: 1,    label: 'Aujourd\'hui' },
-  { value: 7,    label: '7 derniers jours' },
-  { value: 30,   label: '30 derniers jours' },
+  { value: 'all',   label: 'Toutes dates' },
+  { value: 'today', label: 'Aujourd\'hui' },
+  { value: '3days', label: '3 derniers jours' },
+  { value: 'week',  label: 'Cette semaine' },
+  { value: 'month', label: 'Ce mois' },
 ];
 
 const SORT_OPTIONS = [
@@ -77,7 +78,7 @@ export default function SearchPage() {
 
   // Filtres + tri locaux
   const [minScore, setMinScore] = useState(0);
-  const [maxDays,  setMaxDays]  = useState(0);
+  const [datePost, setDatePost] = useState('all');   // envoyé à l'API
   const [sortBy,   setSortBy]   = useState<'score' | 'date' | 'salary'>('score');
 
   async function search() {
@@ -85,6 +86,7 @@ export default function SearchPage() {
     try {
       const params = new URLSearchParams({ q: keywords, where: location });
       if (contract) params.set('contract', contract);
+      if (datePost !== 'all') params.set('date', datePost);
       const res  = await fetch(`/api/job-search?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Erreur de recherche');
@@ -99,10 +101,8 @@ export default function SearchPage() {
 
   // Filtrage + tri client
   const filtered = useMemo(() => {
-    const now = Date.now();
     const list = results.filter(job => {
       if (minScore > 0 && job.score < minScore) return false;
-      if (maxDays > 0 && (now - new Date(job.created).getTime()) / 86400000 > maxDays) return false;
       return true;
     });
     return [...list].sort((a, b) => {
@@ -193,7 +193,7 @@ export default function SearchPage() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-slate-400 font-medium w-14">Date</span>
-            <FilterChips options={DATE_OPTIONS} value={maxDays} onChange={setMaxDays} />
+            <FilterChips options={DATE_OPTIONS} value={datePost} onChange={v => { setDatePost(String(v)); }} />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-slate-400 font-medium w-14">Trier par</span>
@@ -236,6 +236,7 @@ export default function SearchPage() {
                 {job.contract && <span className="text-slate-400"> · {job.contract}</span>}
                 <span className="text-slate-400"> · {daysAgo(job.created)}</span>
               </p>
+              {job.source && <span className="text-xs text-slate-400 mr-2">via {job.source}</span>}
               {job.reason && <p className="text-xs text-brand-600 mt-1 italic">✦ {job.reason}</p>}
               <p className="text-xs text-slate-500 mt-2 line-clamp-2">{job.description}</p>
               <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">

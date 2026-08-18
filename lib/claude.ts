@@ -70,39 +70,71 @@ ${jobText}`
 }
 
 // ── CV Generation ────────────────────────────────────────────────────────────
+// Claude génère UNIQUEMENT ce qui change (summary + bullets + skills + projets sélectionnés)
+// puis on merge avec le profil original en TypeScript → output ~600 tokens au lieu de 2500
+interface CVTailoring {
+  summary: string;
+  experience_bullets: string[][];      // un tableau de bullets par expérience
+  skills: Record<string, string[]>;
+  selected_projects: string[];         // noms des projets à conserver
+  extra_skill_categories?: Record<string, string[]>; // catégories supplémentaires si stack manquante
+}
+
 export async function generateCV(profile: Profile, analysis: JobAnalysis): Promise<Profile> {
+  const expSummary = profile.experience.map((e, i) =>
+    `[${i}] ${e.company} – ${e.role} (${e.start}–${e.end}): ${e.bullets.slice(0,2).join(' | ')}`
+  ).join('\n');
+
   const msg = await client.messages.create({
     model: MODEL,
-    max_tokens: 2500,
+    max_tokens: 1200,
     messages: [{
       role: 'user',
-      content: `Tu es un expert en rédaction de CV ATS-optimisés pour le marché français.
+      content: `Tu es expert CV ATS. Génère UNIQUEMENT le JSON suivant, sans markdown:
+{
+  "summary": "accroche 2-3 phrases ciblée sur le poste",
+  "experience_bullets": [["bullet1","bullet2","bullet3","bullet4"]],
+  "skills": {"Catégorie": ["outil1","outil2"]},
+  "selected_projects": ["NomProjet1","NomProjet2","NomProjet3"]
+}
 
-PROFIL DU CANDIDAT (JSON):
-${JSON.stringify(profile, null, 2)}
+POSTE: ${analysis.position} chez ${analysis.company}
+LANGUE: ${analysis.language === 'en' ? 'ANGLAIS' : 'FRANÇAIS'}
+MOTS-CLÉS ATS: ${analysis.ats_keywords.join(', ')}
+COMPÉTENCES REQUISES: ${analysis.required_skills.join(', ')}
+COMPÉTENCES PRÉFÉRÉES: ${analysis.preferred_skills.join(', ')}
 
-ANALYSE DE L'OFFRE:
-${JSON.stringify(analysis, null, 2)}
+EXPÉRIENCES ACTUELLES:
+${expSummary}
 
-Ta mission: génère une version TAILORED du profil, optimisée pour ce poste.
-Règles STRICTES:
-1. Réécris les bullets d'expérience avec des verbes d'action et des résultats quantifiés, en intégrant les mots-clés ATS: ${analysis.ats_keywords.join(', ')}
-2. Mets en avant les compétences techniques qui matchent les required_skills et preferred_skills
-3. Réordonne les compétences: les plus pertinentes en premier
-4. Adapte le résumé pour coller exactement au poste et à l'entreprise
-5. Sélectionne les 3-4 projets les plus pertinents pour ce poste
-6. ${analysis.language === 'en' ? 'Rédige en ANGLAIS' : 'Rédige en FRANÇAIS'}
-7. Garde EXACTEMENT la même structure JSON que le profil d'entrée
-8. STACK MANQUANTE — RÈGLE ABSOLUE : si une compétence ou technologie listée dans required_skills ou preferred_skills n'est pas dans le profil, tu DOIS l'ajouter. Deux façons selon le contexte :
-   a) Si c'est un outil proche de ce que le candidat utilise déjà : intègre-le naturellement dans un bullet d'expérience existant (ex: "...en utilisant \\textbf{OutilManquant} et \\textbf{OutilConnu}...")
-   b) Sinon : ajoute-le dans la section skills dans la catégorie la plus pertinente
-   L'objectif est un matching ATS de 100%. Ne laisse AUCUNE compétence requise absente du profil final.
+COMPÉTENCES ACTUELLES: ${JSON.stringify(profile.skills)}
+PROJETS DISPONIBLES: ${profile.projects.map(p => p.name).join(', ')}
 
-Renvoie UNIQUEMENT le JSON du profil tailorisé, sans markdown ni explication.`
+RÈGLES:
+1. Réécris les bullets avec verbes d'action + résultats quantifiés + mots-clés ATS
+2. experience_bullets[i] = tableau de bullets pour expérience i (même ordre que ci-dessus)
+3. skills = compétences réordonnées, les plus pertinentes en premier
+4. Si une required_skill manque dans les skills actuelles, ajoute-la dans la catégorie appropriée
+5. selected_projects: 3-4 projets les plus pertinents parmi ceux disponibles
+6. summary: mentionne l'entreprise ${analysis.company} et le poste ${analysis.position}`
     }]
   });
 
-  return parseJSON<Profile>(extractText(msg));
+  const tailoring = parseJSON<CVTailoring>(extractText(msg));
+
+  // Merge avec le profil original — on ne retouche que ce que Claude a changé
+  return {
+    ...profile,
+    summary: tailoring.summary,
+    experience: profile.experience.map((exp, i) => ({
+      ...exp,
+      bullets: tailoring.experience_bullets[i] ?? exp.bullets,
+    })),
+    skills: tailoring.skills,
+    projects: profile.projects
+      .filter(p => tailoring.selected_projects.includes(p.name))
+      .slice(0, 4),
+  };
 }
 
 // ── Cover Letter Generation ──────────────────────────────────────────────────

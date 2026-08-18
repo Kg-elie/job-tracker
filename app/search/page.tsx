@@ -115,7 +115,7 @@ export default function SearchPage() {
       }
       return 0;
     });
-  }, [results, minScore, maxDays, sortBy]);
+  }, [results, minScore, sortBy]);
 
   function parseSalary(s?: string): number {
     if (!s) return 0;

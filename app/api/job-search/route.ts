@@ -102,12 +102,14 @@ export async function GET(req: NextRequest) {
     description: j.job_description.slice(0, 300),
   }));
 
-  const msg = await client.messages.create({
-    model: MODEL,
-    max_tokens: 1000,
-    messages: [{
-      role: 'user',
-      content: `Tu es un conseiller carrière. Évalue chaque offre sur 100 points selon sa pertinence pour ce candidat.
+  let scores: Array<{ i: number; score: number; reason: string }> = [];
+  try {
+    const msg = await client.messages.create({
+      model: MODEL,
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: `Tu es un conseiller carrière. Évalue chaque offre sur 100 points selon sa pertinence pour ce candidat.
 IMPORTANT: utilise TOUT l'intervalle 0-100. Parfait = 90+, très bon = 70-89, correct = 50-69, faible = 20-49, hors sujet = 0-19.
 
 PROFIL CANDIDAT:
@@ -120,11 +122,8 @@ ${jobsForClaude.map(j => `[${j.i}] ${j.title} — ${j.company}\n${j.description}
 
 Réponds UNIQUEMENT avec ce JSON (sans texte avant/après):
 [{"i": 0, "score": 82, "reason": "Python + Tableau requis, correspond parfaitement"}, ...]`,
-    }],
-  });
-
-  let scores: Array<{ i: number; score: number; reason: string }> = [];
-  try {
+      }],
+    });
     const text  = msg.content.find(b => b.type === 'text')?.text ?? '[]';
     const match = text.match(/\[[\s\S]*?\]/);
     if (match) {
@@ -134,9 +133,12 @@ Réponds UNIQUEMENT avec ce JSON (sans texte avant/après):
         ? parsed.map(p => ({ ...p, score: Math.round(p.score * 10) }))
         : parsed;
     }
-  } catch { scores = []; }
+  } catch (e) {
+    // Scoring échoue → on retourne quand même les résultats sans score
+    console.warn('Claude scoring failed:', String(e));
+  }
 
-  // ── 3. Merge + sort ───────────────────────────────────────────────────────
+  // ── 3. Merge + sort (null-safe) ───────────────────────────────────────────
   const results: SearchResult[] = jobs.map((j, i) => {
     const s = scores.find(x => x.i === i);
     let salary: string | undefined;
@@ -147,14 +149,14 @@ Réponds UNIQUEMENT avec ce JSON (sans texte avant/après):
       salary = `${Math.round(j.job_min_salary / 1000)}k €+`;
     }
     return {
-      id:          j.job_id,
-      title:       j.job_title,
-      company:     j.employer_name,
-      location:    [j.job_city, j.job_country].filter(Boolean).join(', '),
-      description: j.job_description.slice(0, 400),
+      id:          j.job_id          ?? String(i),
+      title:       j.job_title       ?? 'Sans titre',
+      company:     j.employer_name   ?? 'Entreprise inconnue',
+      location:    [j.job_city, j.job_country].filter(Boolean).join(', ') || 'France',
+      description: (j.job_description ?? '').slice(0, 400),
       salary,
-      url:         j.job_apply_link,
-      created:     j.job_posted_at_datetime_utc,
+      url:         j.job_apply_link  ?? '#',
+      created:     j.job_posted_at_datetime_utc ?? new Date().toISOString(),
       contract:    j.job_employment_type,
       source:      j.job_publisher,
       score:       s?.score ?? 50,
@@ -168,8 +170,7 @@ Réponds UNIQUEMENT avec ce JSON (sans texte avant/après):
 
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error('job-search error:', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: `Erreur: ${msg}` }, { status: 500 });
   }
 }
 

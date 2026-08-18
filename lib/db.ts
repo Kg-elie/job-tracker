@@ -77,7 +77,7 @@ export interface Template {
 const DEFAULT_PROFILE: Profile = {
   id:           1,
   name:         'Kanga Elie',
-  email:        'eliekanga@proton.me',
+  email:        'eliekanga18@gmail.com',
   phone:        '+33 06 95 71 32 31',
   location:     'Paris, France',
   github:       'github.com/eliekanga',

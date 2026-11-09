@@ -15,7 +15,19 @@ type Status = keyof typeof STATUS_CONFIG;
 type Tab = 'edit' | 'pdf' | 'cv' | 'letter' | 'details';
 
 function parseCV(raw: string): Profile | null {
-  try { return JSON.parse(raw) as Profile; } catch { return null; }
+  try {
+    const value = JSON.parse(raw);
+    if (!value || typeof value !== 'object') return null;
+    if (!Array.isArray(value.experience) || !Array.isArray(value.education)
+      || !value.skills || typeof value.skills !== 'object'
+      || !Array.isArray(value.projects) || !Array.isArray(value.languages)
+      || !Array.isArray(value.certifications)) {
+      return null;
+    }
+    return value as Profile;
+  } catch {
+    return null;
+  }
 }
 
 export default function ApplicationDetail() {

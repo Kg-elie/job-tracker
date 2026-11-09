@@ -86,7 +86,9 @@ export default function ApplicationDetail() {
       if (!response.ok) throw new Error(data.error);
       setApp(prev => prev ? {
         ...prev,
-        ...(kind === 'cv' ? { cv_pdf_path: data.url ?? prev.cv_pdf_path } : { letter_pdf_path: data.url ?? prev.letter_pdf_path }),
+        ...(kind === 'cv'
+          ? { cv_pdf_path: data.url ?? prev.cv_pdf_path }
+          : { letter_pdf_path: data.url ?? prev.letter_pdf_path ?? '' }),
       } : null);
       window.location.reload();
     } catch (e) {

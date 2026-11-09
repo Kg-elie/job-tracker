@@ -219,7 +219,10 @@ async function getNeon() {
   if (!neonSchemaReady) {
     neonSchemaReady = (async () => {
       await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS letter_pdf_path TEXT DEFAULT ''`;
-    })();
+    })().catch(error => {
+      neonSchemaReady = null;
+      throw error;
+    });
   }
   await neonSchemaReady;
   return sql;

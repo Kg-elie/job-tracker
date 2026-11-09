@@ -116,7 +116,7 @@ export default function Dashboard() {
                       <td className="px-4 py-3">
                         <div className="flex gap-1">
                           <span className={`text-xs px-2 py-0.5 rounded ${app.cv_latex ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>CV</span>
-                          <span className={`text-xs px-2 py-0.5 rounded ${app.letter_pdf_path || app.letter_text ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>LM</span>
+                          <span className={`text-xs px-2 py-0.5 rounded ${app.letter_text ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>LM</span>
                           {app.cv_pdf_path && <span className="text-xs px-2 py-0.5 rounded bg-brand-100 text-brand-700">PDF</span>}
                         </div>
                       </td>
@@ -151,7 +151,7 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex gap-1">
                       <span className={`text-xs px-2 py-0.5 rounded ${app.cv_latex ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>CV</span>
-                      <span className={`text-xs px-2 py-0.5 rounded ${app.letter_pdf_path || app.letter_text ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>LM</span>
+                      <span className={`text-xs px-2 py-0.5 rounded ${app.letter_text ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>LM</span>
                       {app.cv_pdf_path && <span className="text-xs px-2 py-0.5 rounded bg-brand-100 text-brand-700">PDF</span>}
                     </div>
                     <div className="flex gap-3">

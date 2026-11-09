@@ -88,7 +88,7 @@ export default function ApplicationDetail() {
         ...prev,
         ...(kind === 'cv'
           ? { cv_pdf_path: data.url ?? prev.cv_pdf_path }
-          : { letter_pdf_path: data.url ?? prev.letter_pdf_path ?? '' }),
+          : { letter_text: data.url ?? prev.letter_text }),
       } : null);
       window.location.reload();
     } catch (e) {
@@ -384,14 +384,14 @@ export default function ApplicationDetail() {
                 <input type="file" accept="application/pdf,.pdf" className="hidden"
                   onChange={e => { const file = e.target.files?.[0]; if (file) void uploadPDF(file, 'letter'); }} />
               </label>
-              {app.letter_pdf_path && (
-                <a href={app.letter_pdf_path} target="_blank" rel="noreferrer"
+              {app.letter_text?.startsWith('http') || app.letter_text?.startsWith('data:application/pdf') ? (
+                <a href={app.letter_text} target="_blank" rel="noreferrer"
                   className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium">⬇ Voir le PDF</a>
               )}
             </div>
           </div>
-          {app.letter_pdf_path ? (
-            <iframe src={app.letter_pdf_path} className="w-full" style={{ height: '70vh', border: 'none' }} title="Lettre de motivation PDF" />
+          {app.letter_text?.startsWith('http') || app.letter_text?.startsWith('data:application/pdf') ? (
+            <iframe src={app.letter_text} className="w-full" style={{ height: '70vh', border: 'none' }} title="Lettre de motivation PDF" />
           ) : (
             <div className="p-12 text-center text-slate-400">Aucune lettre PDF ajoutée.</div>
           )}

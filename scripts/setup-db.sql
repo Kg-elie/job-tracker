@@ -26,8 +26,6 @@ CREATE TABLE IF NOT EXISTS applications (
   updated_at       TIMESTAMPTZ  DEFAULT NOW()
 );
 
-ALTER TABLE applications ADD COLUMN IF NOT EXISTS letter_pdf_path TEXT DEFAULT '';
-
 CREATE TABLE IF NOT EXISTS templates (
   id           SERIAL PRIMARY KEY,
   name         TEXT         NOT NULL,

@@ -46,7 +46,7 @@ export async function POST(
     url = `data:application/pdf;base64,${bytes.toString('base64')}`;
   }
 
-  const field: 'cv_pdf_path' | 'letter_pdf_path' = kind === 'cv' ? 'cv_pdf_path' : 'letter_pdf_path';
+  const field: 'cv_pdf_path' | 'letter_text' = kind === 'cv' ? 'cv_pdf_path' : 'letter_text';
   await updateApplication(applicationId, { [field]: url });
   return NextResponse.json({ ok: true, field, url });
 }

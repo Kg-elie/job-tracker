@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS applications (
   cv_json          TEXT         DEFAULT '{}',
   cv_latex         TEXT         DEFAULT '',
   cv_pdf_path      TEXT         DEFAULT '',
-  letter_pdf_path  TEXT         DEFAULT '',
   letter_text      TEXT         DEFAULT '',
   notes            TEXT         DEFAULT '',
   applied_at       TIMESTAMPTZ,

@@ -211,9 +211,18 @@ const json = {
 // ════════════════════════════════════════════════════════════════════════════
 // BACKEND NEON (prod Vercel)
 // ════════════════════════════════════════════════════════════════════════════
+let neonSchemaReady: Promise<void> | null = null;
+
 async function getNeon() {
   const { neon } = await import('@neondatabase/serverless');
-  return neon(process.env.DATABASE_URL!);
+  const sql = neon(process.env.DATABASE_URL!);
+  if (!neonSchemaReady) {
+    neonSchemaReady = (async () => {
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS letter_pdf_path TEXT DEFAULT ''`;
+    })();
+  }
+  await neonSchemaReady;
+  return sql;
 }
 
 const pg = {

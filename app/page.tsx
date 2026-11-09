@@ -23,7 +23,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetch('/api/applications')
-      .then(r => r.json())
       .then(async response => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error ?? 'Impossible de charger la base de données.');

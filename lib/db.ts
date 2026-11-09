@@ -57,6 +57,7 @@ export interface Application {
   cv_json: string;
   cv_latex: string;
   cv_pdf_path: string;
+  letter_pdf_path: string;
   letter_text: string;
   notes: string;
   applied_at: string | null;
@@ -171,7 +172,7 @@ const json = {
     const apps = readJSON<Application[]>('applications.json', []);
     const id   = apps.length > 0 ? Math.max(...apps.map(a => a.id)) + 1 : 1;
     const now  = new Date().toISOString();
-    apps.push({ id, company: '', position: '', job_url: '', job_description: '', job_analysis: '{}', status: 'interested', template_id: null, cv_json: '{}', cv_latex: '', cv_pdf_path: '', letter_text: '', notes: '', applied_at: null, created_at: now, updated_at: now, ...data });
+    apps.push({ id, company: '', position: '', job_url: '', job_description: '', job_analysis: '{}', status: 'interested', template_id: null, cv_json: '{}', cv_latex: '', cv_pdf_path: '', letter_pdf_path: '', letter_text: '', notes: '', applied_at: null, created_at: now, updated_at: now, ...data });
     writeJSON('applications.json', apps);
     return id;
   },
@@ -254,8 +255,8 @@ const pg = {
   async createApplication(data: Partial<Application>): Promise<number> {
     const sql  = await getNeon();
     const rows = await sql`
-      INSERT INTO applications (company,position,job_url,job_description,job_analysis,status,template_id,cv_json,cv_latex,cv_pdf_path,letter_text,notes,applied_at)
-      VALUES (${data.company??''},${data.position??''},${data.job_url??''},${data.job_description??''},${data.job_analysis??'{}'},${data.status??'interested'},${data.template_id??null},${data.cv_json??'{}'},${data.cv_latex??''},${data.cv_pdf_path??''},${data.letter_text??''},${data.notes??''},${data.applied_at??null})
+      INSERT INTO applications (company,position,job_url,job_description,job_analysis,status,template_id,cv_json,cv_latex,cv_pdf_path,letter_pdf_path,letter_text,notes,applied_at)
+      VALUES (${data.company??''},${data.position??''},${data.job_url??''},${data.job_description??''},${data.job_analysis??'{}'},${data.status??'interested'},${data.template_id??null},${data.cv_json??'{}'},${data.cv_latex??''},${data.cv_pdf_path??''},${data.letter_pdf_path??''},${data.letter_text??''},${data.notes??''},${data.applied_at??null})
       RETURNING id`;
     return rows[0].id as number;
   },
@@ -264,7 +265,7 @@ const pg = {
     const current = await pg.getApplication(id);
     if (!current) return;
     const m = { ...current, ...data };
-    await sql`UPDATE applications SET company=${m.company},position=${m.position},job_url=${m.job_url},job_description=${m.job_description},job_analysis=${m.job_analysis},status=${m.status},template_id=${m.template_id??null},cv_json=${m.cv_json},cv_latex=${m.cv_latex},cv_pdf_path=${m.cv_pdf_path},letter_text=${m.letter_text},notes=${m.notes},applied_at=${m.applied_at??null},updated_at=NOW() WHERE id=${id}`;
+    await sql`UPDATE applications SET company=${m.company},position=${m.position},job_url=${m.job_url},job_description=${m.job_description},job_analysis=${m.job_analysis},status=${m.status},template_id=${m.template_id??null},cv_json=${m.cv_json},cv_latex=${m.cv_latex},cv_pdf_path=${m.cv_pdf_path},letter_pdf_path=${m.letter_pdf_path},letter_text=${m.letter_text},notes=${m.notes},applied_at=${m.applied_at??null},updated_at=NOW() WHERE id=${id}`;
   },
   async deleteApplication(id: number): Promise<void> {
     const sql = await getNeon();

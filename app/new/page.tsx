@@ -9,8 +9,8 @@ export default function NewApplication() {
   const [position, setPosition] = useState('');
   const [jobUrl, setJobUrl] = useState('');
   const [jobText, setJobText] = useState('');
-  const [cvText, setCvText] = useState('');
-  const [letter, setLetter] = useState('');
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [letterFile, setLetterFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -31,13 +31,20 @@ export default function NewApplication() {
           position: position.trim(),
           job_url: jobUrl.trim(),
           job_description: jobText.trim(),
-          cv_latex: cvText.trim(),
-          letter_text: letter.trim(),
           status: 'interested',
         }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? 'Impossible de créer la candidature.');
+      for (const [file, kind] of [[cvFile, 'cv'], [letterFile, 'letter']] as const) {
+        if (!file) continue;
+        const form = new FormData();
+        form.append('file', file);
+        form.append('kind', kind);
+        const upload = await fetch(`/api/applications/${data.id}/files`, { method: 'POST', body: form });
+        const uploadData = await upload.json();
+        if (!upload.ok) throw new Error(uploadData.error ?? 'Impossible d’envoyer le PDF.');
+      }
       router.push(`/applications/${data.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Impossible de créer la candidature.');
@@ -103,23 +110,21 @@ export default function NewApplication() {
 
         <label className="block text-sm font-semibold text-slate-700">
           CV associé (facultatif)
-          <textarea
-            value={cvText}
-            onChange={e => setCvText(e.target.value)}
-            rows={8}
-            className="mt-2 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono font-normal focus:outline-none focus:ring-2 focus:ring-brand-400 resize-none"
-            placeholder="Colle le contenu du CV ou indique le lien vers le fichier..."
+          <input
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={e => setCvFile(e.target.files?.[0] ?? null)}
+            className="mt-2 block w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-normal"
           />
         </label>
 
         <label className="block text-sm font-semibold text-slate-700">
           Lettre de motivation associée (facultatif)
-          <textarea
-            value={letter}
-            onChange={e => setLetter(e.target.value)}
-            rows={8}
-            className="mt-2 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-brand-400 resize-none"
-            placeholder="Colle le contenu de la lettre ou indique le lien vers le fichier..."
+          <input
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={e => setLetterFile(e.target.files?.[0] ?? null)}
+            className="mt-2 block w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-normal"
           />
         </label>
 

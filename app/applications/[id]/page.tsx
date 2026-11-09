@@ -31,12 +31,7 @@ export default function ApplicationDetail() {
   const [recompileMsg, setRecompileMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [copied, setCopied]         = useState<string | null>(null);
-  const [letter, setLetter]         = useState('');
-  const [letterSaving, setLetterSaving] = useState(false);
-  const [letterSaved, setLetterSaved]   = useState(false);
-  const [cvText, setCvText]         = useState('');
-  const [cvSaving, setCvSaving]     = useState(false);
-  const [cvSaved, setCvSaved]       = useState(false);
+  const [fileUploading, setFileUploading] = useState<'cv' | 'letter' | null>(null);
 
   function shareFile(path: string, title: string, key: string) {
     const url = `${window.location.origin}${path}`;
@@ -59,8 +54,6 @@ export default function ApplicationDetail() {
         if (data.error) { setLoading(false); return; } // 404
         setApp(data);
         setNotes(data.notes ?? '');
-        setLetter(data.letter_text ?? '');
-        setCvText(data.cv_latex ?? '');
         const parsed = parseCV(data.cv_json);
         if (parsed) setCv(parsed);
         setLoading(false);
@@ -78,22 +71,29 @@ export default function ApplicationDetail() {
     setNoteSaved(true); setTimeout(() => setNoteSaved(false), 2000);
   }
 
-  async function saveLetter() {
-    setLetterSaving(true);
-    await fetch(`/api/applications/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ letter_text: letter }) });
-    setApp(prev => prev ? { ...prev, letter_text: letter } : null);
-    setLetterSaving(false);
-    setLetterSaved(true);
-    setTimeout(() => setLetterSaved(false), 2000);
-  }
-
-  async function saveCV() {
-    setCvSaving(true);
-    await fetch(`/api/applications/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cv_latex: cvText }) });
-    setApp(prev => prev ? { ...prev, cv_latex: cvText } : null);
-    setCvSaving(false);
-    setCvSaved(true);
-    setTimeout(() => setCvSaved(false), 2000);
+  async function uploadPDF(file: File, kind: 'cv' | 'letter') {
+    if (file.type !== 'application/pdf') {
+      setRecompileMsg('❌ Sélectionne un fichier PDF.');
+      return;
+    }
+    setFileUploading(kind);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('kind', kind);
+      const response = await fetch(`/api/applications/${id}/files`, { method: 'POST', body: form });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setApp(prev => prev ? {
+        ...prev,
+        ...(kind === 'cv' ? { cv_pdf_path: data.url ?? prev.cv_pdf_path } : { letter_pdf_path: data.url ?? prev.letter_pdf_path }),
+      } : null);
+      window.location.reload();
+    } catch (e) {
+      setRecompileMsg(`❌ ${e instanceof Error ? e.message : 'Upload impossible'}`);
+    } finally {
+      setFileUploading(null);
+    }
   }
 
   async function handleRecompile() {
@@ -293,6 +293,11 @@ export default function ApplicationDetail() {
                   >
                     {recompiling ? <span className="flex items-center gap-1.5"><span className="animate-spin">⟳</span> Recompile…</span> : '🔄 Sauvegarder & Recompiler'}
                   </button>
+                  <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium cursor-pointer">
+                    {fileUploading === 'cv' ? '⏳ Upload…' : '📎 Remplacer le PDF'}
+                    <input type="file" accept="application/pdf,.pdf" className="hidden"
+                      onChange={e => { const file = e.target.files?.[0]; if (file) void uploadPDF(file, 'cv'); }} />
+                  </label>
                 </div>
               </div>
             </>
@@ -345,65 +350,24 @@ export default function ApplicationDetail() {
       {tab === 'cv' && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <span className="text-sm font-semibold text-slate-700">CV associé</span>
+            <span className="text-sm font-semibold text-slate-700">CV associé (PDF)</span>
             <div className="flex gap-2 flex-wrap justify-end">
-              <button onClick={saveCV} disabled={cvSaving}
-                className="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded-lg font-medium">
-                {cvSaving ? '⏳ Sauvegarde…' : cvSaved ? '✅ Sauvegardé !' : '💾 Sauvegarder'}
-              </button>
+              <label className="bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium cursor-pointer">
+                {fileUploading === 'cv' ? '⏳ Upload…' : '📎 Ajouter un PDF'}
+                <input type="file" accept="application/pdf,.pdf" className="hidden"
+                  onChange={e => { const file = e.target.files?.[0]; if (file) void uploadPDF(file, 'cv'); }} />
+              </label>
               {app.cv_pdf_path && (
-                <a href={`/api/pdf/${app.id}?dl=1`} className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium">⬇ PDF</a>
+                <a href={app.cv_pdf_path} target="_blank" rel="noreferrer"
+                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium">⬇ Voir le PDF</a>
               )}
-              {app.cv_latex && (<>
-                <button
-                  onClick={() => {
-                    const blob = new Blob([app.cv_latex], { type: 'text/plain' });
-                    const url  = URL.createObjectURL(blob);
-                    const a    = document.createElement('a');
-                    a.href     = url;
-                    a.download = `cv_${app.company}_${app.position}.tex`.replace(/[^a-zA-Z0-9._-]/g, '_');
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }}
-                  className="bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
-                >⬇ .tex</button>
-                <button
-                  onClick={() => {
-                    // Overleaf "Open in Overleaf" — encode le LaTeX en base64 et l'envoie en POST
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = 'https://www.overleaf.com/docs';
-                    form.target = '_blank';
-                    const nameInput = document.createElement('input');
-                    nameInput.type  = 'hidden';
-                    nameInput.name  = 'snip_name';
-                    nameInput.value = `CV_${app?.company ?? 'CV'}`;
-                    form.appendChild(nameInput);
-                    const snipInput = document.createElement('input');
-                    snipInput.type  = 'hidden';
-                    snipInput.name  = 'encoded_snip';
-                    snipInput.value = btoa(unescape(encodeURIComponent(app?.cv_latex ?? '')));
-                    form.appendChild(snipInput);
-                    document.body.appendChild(form);
-                    form.submit();
-                    document.body.removeChild(form);
-                  }}
-                  className="bg-green-700 hover:bg-green-800 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
-                >🍃 Overleaf</button>
-                <button
-                  onClick={() => navigator.clipboard.writeText(app.cv_latex)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium"
-                >📋 Copier</button>
-              </>)}
             </div>
           </div>
-          <textarea
-            value={cvText}
-            onChange={e => setCvText(e.target.value)}
-            className="w-full p-6 text-sm text-slate-800 leading-relaxed font-mono resize-y border-0 focus:outline-none focus:ring-0"
-            style={{ minHeight: '60vh' }}
-            placeholder="Colle ici le CV associé à cette candidature…"
-          />
+          {app.cv_pdf_path ? (
+            <iframe src={app.cv_pdf_path} className="w-full" style={{ height: '70vh', border: 'none' }} title="CV PDF" />
+          ) : (
+            <div className="p-12 text-center text-slate-400">Aucun CV PDF ajouté.</div>
+          )}
         </div>
       )}
 
@@ -413,30 +377,22 @@ export default function ApplicationDetail() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
             <span className="text-sm font-semibold text-slate-700">Lettre de motivation</span>
             <div className="flex gap-2 flex-wrap justify-end">
-              <button
-                onClick={saveLetter}
-                disabled={letterSaving}
-                className="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded-lg font-medium"
-              >{letterSaving ? '⏳ Sauvegarde…' : letterSaved ? '✅ Sauvegardé !' : '💾 Sauvegarder'}</button>
-              <button onClick={() => navigator.clipboard.writeText(letter)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium">📋 Copier</button>
-              {app.letter_text && (<>
-                <a href={`/api/letter/${app.id}`}
-                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium">⬇ PDF</a>
-                <button
-                  onClick={() => shareFile(`/api/letter/${app.id}`, `Lettre_${app.position}_${app.company}`, 'letter')}
-                  className="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-lg font-medium"
-                >{copied === 'letter' ? '✅ Lien copié !' : '🔗 Partager'}</button>
-              </>)}
+              <label className="bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium cursor-pointer">
+                {fileUploading === 'letter' ? '⏳ Upload…' : '📎 Ajouter un PDF'}
+                <input type="file" accept="application/pdf,.pdf" className="hidden"
+                  onChange={e => { const file = e.target.files?.[0]; if (file) void uploadPDF(file, 'letter'); }} />
+              </label>
+              {app.letter_pdf_path && (
+                <a href={app.letter_pdf_path} target="_blank" rel="noreferrer"
+                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium">⬇ Voir le PDF</a>
+              )}
             </div>
           </div>
-          <textarea
-            value={letter}
-            onChange={e => setLetter(e.target.value)}
-            className="w-full p-6 text-sm text-slate-800 leading-relaxed font-serif resize-y border-0 focus:outline-none focus:ring-0"
-            style={{ minHeight: '60vh' }}
-            placeholder="Colle ici la lettre de motivation associée…"
-          />
+          {app.letter_pdf_path ? (
+            <iframe src={app.letter_pdf_path} className="w-full" style={{ height: '70vh', border: 'none' }} title="Lettre de motivation PDF" />
+          ) : (
+            <div className="p-12 text-center text-slate-400">Aucune lettre PDF ajoutée.</div>
+          )}
         </div>
       )}
 

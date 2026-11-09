@@ -15,7 +15,7 @@ npm run dev
 
 ## Fonctionnalités
 
-- **Nouvelle candidature** : renseigne manuellement le lien de l'offre, le CV et la lettre associés
+- **Nouvelle candidature** : renseigne manuellement le lien de l'offre, puis ajoute les CV et lettre au format PDF, immédiatement ou plus tard
 - **Tracker** : statuts Intéressé → En attente → Entretien → Refus / Accepté
 - **Profil** : tes informations pré-remplies, modifiables à tout moment
 

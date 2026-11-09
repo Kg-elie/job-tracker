@@ -19,12 +19,15 @@ CREATE TABLE IF NOT EXISTS applications (
   cv_json          TEXT         DEFAULT '{}',
   cv_latex         TEXT         DEFAULT '',
   cv_pdf_path      TEXT         DEFAULT '',
+  letter_pdf_path  TEXT         DEFAULT '',
   letter_text      TEXT         DEFAULT '',
   notes            TEXT         DEFAULT '',
   applied_at       TIMESTAMPTZ,
   created_at       TIMESTAMPTZ  DEFAULT NOW(),
   updated_at       TIMESTAMPTZ  DEFAULT NOW()
 );
+
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS letter_pdf_path TEXT DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS templates (
   id           SERIAL PRIMARY KEY,

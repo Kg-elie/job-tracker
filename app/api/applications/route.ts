@@ -16,6 +16,12 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    if (typeof body.job_url !== 'string' || !/^https?:\/\/\S+$/i.test(body.job_url.trim())) {
+      return NextResponse.json(
+        { error: "Le lien de l'offre est obligatoire et doit être une URL valide." },
+        { status: 400 },
+      );
+    }
     const id = await createApplication(body);
     log.info('applications: candidature créée', { id, company: body.company, position: body.position });
     return NextResponse.json({ id }, { status: 201 });

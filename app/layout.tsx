@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Job Tracker – Kanga Elie',
-  description: 'Suivi de candidatures avec génération CV & lettre IA',
+  description: 'Suivi manuel des candidatures',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -20,7 +20,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Nav links — scrollable horizontally on mobile */}
             <div className="flex gap-4 sm:gap-6 text-sm font-medium text-slate-600 overflow-x-auto">
               <Link href="/"          className="hover:text-brand-600 transition-colors whitespace-nowrap">Dashboard</Link>
-              <Link href="/search"    className="hover:text-brand-600 transition-colors whitespace-nowrap">🔍 Recherche</Link>
               <Link href="/new"       className="hover:text-brand-600 transition-colors whitespace-nowrap">+ Candidature</Link>
               <Link href="/profile"   className="hover:text-brand-600 transition-colors whitespace-nowrap">Profil</Link>
               <Link href="/templates" className="hover:text-brand-600 transition-colors whitespace-nowrap">Templates</Link>

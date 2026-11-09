@@ -63,7 +63,7 @@ export default function TemplatesPage() {
     <div className="max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold text-slate-900 mb-2">Templates LaTeX</h1>
       <p className="text-slate-500 text-sm mb-8">
-        Ajoute tes propres templates <code className="bg-slate-100 px-1 rounded">.tex</code>. Claude les remplira automatiquement avec ton profil lors de la génération.
+        Ajoute tes propres templates <code className="bg-slate-100 px-1 rounded">.tex</code> pour les conserver avec tes candidatures.
       </p>
 
       <div className="grid grid-cols-5 gap-6">

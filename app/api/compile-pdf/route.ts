@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const app = await getApplication(applicationId);
     if (!app) return NextResponse.json({ error: 'Candidature introuvable' }, { status: 404 });
 
-    // Utilise le cv_json déjà sauvegardé par /api/generate
+    // Utilise le CV déjà sauvegardé sur la candidature.
     const cvJson = JSON.parse(app.cv_json || '{}') as Profile;
     const latex  = app.cv_latex || generateIIITVLatex(cvJson);
     const fname  = `cv_${applicationId}_${Date.now()}`;

@@ -1,6 +1,6 @@
 # 🎯 Job Tracker – Kanga Elie
 
-Site personnel de suivi de candidatures avec génération de CV et lettre de motivation via Claude AI.
+Site personnel de suivi manuel des candidatures.
 
 ## Démarrage rapide
 
@@ -8,22 +8,18 @@ Site personnel de suivi de candidatures avec génération de CV et lettre de mot
 # 1. Installer les dépendances
 npm install
 
-# 2. Configurer la clé API
-cp .env.local.example .env.local
-# → édite .env.local et mets ta clé ANTHROPIC_API_KEY
-
-# 3. Lancer le serveur de dev
+# 2. Lancer le serveur de dev
 npm run dev
 # → ouvre http://localhost:3000
 ```
 
 ## Fonctionnalités
 
-- **Nouvelle candidature** : colle le texte de l'offre → Claude analyse → CV + lettre générés en ~30s
-- **CV ATS-friendly** : template IIIT Vadodara en LaTeX, adapté et optimisé pour les mots-clés du poste
-- **Lettre de motivation** : rédigée par Claude, adaptée à l'entreprise et au poste
+- **Nouvelle candidature** : renseigne manuellement le lien de l'offre, le CV et la lettre associés
 - **Tracker** : statuts Intéressé → En attente → Entretien → Refus / Accepté
 - **Profil** : tes informations pré-remplies, modifiables à tout moment
+
+La recherche et le scraping d'offres, l'analyse automatique, les générateurs et l'API Claude sont désactivés.
 
 ## Compilation PDF (optionnel)
 
@@ -39,6 +35,5 @@ Sans MacTeX, le LaTeX est quand même généré et affiché dans l'interface —
 
 - **Next.js 14** (App Router)
 - **SQLite** via better-sqlite3 (base de données locale dans `data/`)
-- **Claude API** (Anthropic) pour analyse offre + génération CV + lettre
 - **Tailwind CSS**
-- **LaTeX** template IIIT Vadodara (ATS-friendly)
+- **LaTeX** pour les documents déjà enregistrés

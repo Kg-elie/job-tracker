@@ -34,6 +34,9 @@ export default function ApplicationDetail() {
   const [letter, setLetter]         = useState('');
   const [letterSaving, setLetterSaving] = useState(false);
   const [letterSaved, setLetterSaved]   = useState(false);
+  const [cvText, setCvText]         = useState('');
+  const [cvSaving, setCvSaving]     = useState(false);
+  const [cvSaved, setCvSaved]       = useState(false);
 
   function shareFile(path: string, title: string, key: string) {
     const url = `${window.location.origin}${path}`;
@@ -57,6 +60,7 @@ export default function ApplicationDetail() {
         setApp(data);
         setNotes(data.notes ?? '');
         setLetter(data.letter_text ?? '');
+        setCvText(data.cv_latex ?? '');
         const parsed = parseCV(data.cv_json);
         if (parsed) setCv(parsed);
         setLoading(false);
@@ -81,6 +85,15 @@ export default function ApplicationDetail() {
     setLetterSaving(false);
     setLetterSaved(true);
     setTimeout(() => setLetterSaved(false), 2000);
+  }
+
+  async function saveCV() {
+    setCvSaving(true);
+    await fetch(`/api/applications/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cv_latex: cvText }) });
+    setApp(prev => prev ? { ...prev, cv_latex: cvText } : null);
+    setCvSaving(false);
+    setCvSaved(true);
+    setTimeout(() => setCvSaved(false), 2000);
   }
 
   async function handleRecompile() {
@@ -332,8 +345,12 @@ export default function ApplicationDetail() {
       {tab === 'cv' && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <span className="text-sm font-semibold text-slate-700">Source LaTeX</span>
+            <span className="text-sm font-semibold text-slate-700">CV associé</span>
             <div className="flex gap-2 flex-wrap justify-end">
+              <button onClick={saveCV} disabled={cvSaving}
+                className="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded-lg font-medium">
+                {cvSaving ? '⏳ Sauvegarde…' : cvSaved ? '✅ Sauvegardé !' : '💾 Sauvegarder'}
+              </button>
               {app.cv_pdf_path && (
                 <a href={`/api/pdf/${app.id}?dl=1`} className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium">⬇ PDF</a>
               )}
@@ -380,10 +397,13 @@ export default function ApplicationDetail() {
               </>)}
             </div>
           </div>
-          {app.cv_latex
-            ? <pre className="p-4 text-xs font-mono text-slate-700 overflow-auto max-h-[600px] leading-relaxed">{app.cv_latex}</pre>
-            : <div className="p-8 text-center text-slate-400"><p className="text-4xl mb-3">📭</p><p>CV non généré.</p></div>
-          }
+          <textarea
+            value={cvText}
+            onChange={e => setCvText(e.target.value)}
+            className="w-full p-6 text-sm text-slate-800 leading-relaxed font-mono resize-y border-0 focus:outline-none focus:ring-0"
+            style={{ minHeight: '60vh' }}
+            placeholder="Colle ici le CV associé à cette candidature…"
+          />
         </div>
       )}
 
@@ -415,7 +435,7 @@ export default function ApplicationDetail() {
             onChange={e => setLetter(e.target.value)}
             className="w-full p-6 text-sm text-slate-800 leading-relaxed font-serif resize-y border-0 focus:outline-none focus:ring-0"
             style={{ minHeight: '60vh' }}
-            placeholder="La lettre de motivation apparaîtra ici après génération…"
+            placeholder="Colle ici la lettre de motivation associée…"
           />
         </div>
       )}

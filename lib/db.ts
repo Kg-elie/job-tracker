@@ -123,7 +123,16 @@ const DEFAULT_PROFILE: Profile = {
 // MODE DÉTECTION
 // ════════════════════════════════════════════════════════════════════════════
 function useNeon(): boolean {
-  return !!process.env.DATABASE_URL;
+  if (process.env.VERCEL && !getDatabaseUrl()) {
+    throw new Error('Connexion Neon absente. Configure DATABASE_URL ou POSTGRES_URL dans Vercel.');
+  }
+  return !!getDatabaseUrl();
+}
+
+function getDatabaseUrl(): string | undefined {
+  return process.env.DATABASE_URL
+    ?? process.env.POSTGRES_URL
+    ?? process.env.POSTGRES_URL_NON_POOLING;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -211,8 +220,12 @@ const json = {
 // BACKEND NEON (prod Vercel)
 // ════════════════════════════════════════════════════════════════════════════
 async function getNeon() {
+  const databaseUrl = getDatabaseUrl();
+  if (!databaseUrl) {
+    throw new Error('Connexion Neon absente. Configure DATABASE_URL ou POSTGRES_URL.');
+  }
   const { neon } = await import('@neondatabase/serverless');
-  return neon(process.env.DATABASE_URL!);
+  return neon(databaseUrl);
 }
 
 const pg = {

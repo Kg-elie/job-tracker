@@ -19,12 +19,18 @@ export default function Dashboard() {
   const [apps, setApps]       = useState<Application[]>([]);
   const [filter, setFilter]   = useState<Status | 'all'>('all');
   const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState('');
 
   useEffect(() => {
     fetch('/api/applications')
       .then(r => r.json())
-      .then(data => { setApps(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(async response => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error ?? 'Impossible de charger la base de données.');
+        setApps(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(e => { setError(e instanceof Error ? e.message : 'Impossible de charger la base de données.'); setLoading(false); });
   }, []);
 
   const counts = STATUS_ORDER.reduce((acc, s) => {
@@ -50,6 +56,7 @@ export default function Dashboard() {
   }
 
   if (loading) return <div className="text-center py-20 text-slate-400 animate-pulse">Chargement…</div>;
+  if (error) return <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm">{error}</div>;
 
   return (
     <div>

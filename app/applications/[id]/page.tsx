@@ -32,6 +32,7 @@ export default function ApplicationDetail() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied]         = useState<string | null>(null);
   const [fileUploading, setFileUploading] = useState<'cv' | 'letter' | null>(null);
+  const [loadError, setLoadError] = useState('');
 
   function shareFile(path: string, title: string, key: string) {
     const url = `${window.location.origin}${path}`;
@@ -51,14 +52,14 @@ export default function ApplicationDetail() {
     fetch(`/api/applications/${id}`)
       .then(r => r.json())
       .then((data: Application & { error?: string }) => {
-        if (data.error) { setLoading(false); return; } // 404
+        if (data.error) { setLoadError(data.error); setLoading(false); return; }
         setApp(data);
         setNotes(data.notes ?? '');
         const parsed = parseCV(data.cv_json);
         if (parsed) setCv(parsed);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { setLoadError('Impossible de contacter la base de données.'); setLoading(false); });
   }, [id]);
 
   async function updateStatus(status: Status) {
@@ -143,6 +144,7 @@ export default function ApplicationDetail() {
   }
 
   if (loading) return <div className="text-center py-20 text-slate-400 animate-pulse">Chargement…</div>;
+  if (loadError) return <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm">{loadError}</div>;
   if (!app)   return <div className="text-center py-20 text-slate-400">Introuvable</div>;
 
   const cfg      = STATUS_CONFIG[app.status as Status] ?? STATUS_CONFIG.interested;

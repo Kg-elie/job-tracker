@@ -13,6 +13,8 @@ npm run dev
 # → ouvre http://localhost:3000
 ```
 
+En production sur Vercel, configure `DATABASE_URL` (ou `POSTGRES_URL`) avec la chaîne de connexion de ta base Neon.
+
 ## Fonctionnalités
 
 - **Nouvelle candidature** : renseigne manuellement le lien de l'offre, puis ajoute les CV et lettre au format PDF, immédiatement ou plus tard
